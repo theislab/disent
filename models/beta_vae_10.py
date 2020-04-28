@@ -10,9 +10,9 @@ from keras.layers import Input, Dense, BatchNormalization, LeakyReLU, Dropout, L
 from keras.models import load_model
 from scipy import sparse
 
-#import scgen
-import util_lossC as ul
-#from util_lossC import balancer,extractor,shuffle_adata
+
+import util_loss as ul
+
 
 log = logging.getLogger(__file__)
 
@@ -22,6 +22,7 @@ class C_VAEArithKeras:
     """
         VAE with Arithmetic vector Network class. This class contains the implementation of Variational
         Auto-encoder network with Vector Arithmetics.
+        This model strictly employs 10 unit dimensional space because of the loss function
         Parameters
         ----------
         kwargs:
@@ -37,9 +38,11 @@ class C_VAEArithKeras:
             number of gene expression space dimensions.
         z_dimension: integer
             number of latent space dimensions.
-        See also
-        --------
-        CVAE from scgen.models._cvae : Conditional VAE implementation.
+        c_max: integer
+            Value of C used in the loss function.
+        alpha: float
+            Weight for the KL Divergence term in loss function.
+
     """
 
     def __init__(self, x_dimension, z_dimension=100 , **kwargs):
@@ -175,6 +178,7 @@ class C_VAEArithKeras:
             network. This will define the KL Divergence and Reconstruction loss for
             VAE and also defines the Optimization algorithm for network. The VAE Loss
             will be weighted sum of reconstruction loss and KL Divergence loss.
+            The loss function also returns KL Divergence for every latent space dimension.
             Parameters
             ----------
             No parameters are needed.

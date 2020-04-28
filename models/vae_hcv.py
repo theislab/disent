@@ -1,5 +1,7 @@
 import logging
 import os
+import tensorflow as tf 
+from scipy.special import gamma
 
 import keras
 import numpy
@@ -9,8 +11,10 @@ from keras.callbacks import LambdaCallback,EarlyStopping,ModelCheckpoint
 from keras.layers import Input, Dense, BatchNormalization, LeakyReLU, Dropout, Lambda
 from keras.models import load_model
 from scipy import sparse
+import math
 
 import util_loss as ul
+
 
 log = logging.getLogger(__file__)
 
@@ -36,6 +40,10 @@ class C_VAEArithKeras:
             number of gene expression space dimensions.
         z_dimension: integer
             number of latent space dimensions.
+        hcv_scale: integer
+            Weight for the dHSIC kernel in loss function
+        alpha: float
+            Weight for the KL Divergence term in loss function.
     """
 
     def __init__(self, x_dimension, z_dimension=100 , **kwargs):
@@ -45,6 +53,7 @@ class C_VAEArithKeras:
         self.dropout_rate = kwargs.get("dropout_rate", 0.2)
         self.model_to_use = kwargs.get("model_to_use", "./models/")
         self.alpha = kwargs.get("alpha", 0.00005)
+        self.hcv_scale = kwargs.get("hcv_scale", 50)
         #self.c_max = kwargs.get("c_max", 20)
         #self.c_current = K.variable(value=0.01)
         self.x = Input(shape=(x_dimension,), name="input")
@@ -170,8 +179,8 @@ class C_VAEArithKeras:
             Defines the loss function of VAE network after constructing the whole
             network. This will define the KL Divergence and Reconstruction loss for
             VAE and also defines the Optimization algorithm for network. The VAE Loss
-            will be weighted sum of reconstruction loss and KL Divergence loss.
-            The loss function also returns KL Divergence for every latent space dimension.
+            will be weighted sum of reconstruction loss, KL Divergence loss and dHSIC kernel.
+            The loss function returns KL Divergence for every latent space dimension and the dHSIC kernel value.
             Parameters
             ----------
             No parameters are needed.
@@ -182,7 +191,39 @@ class C_VAEArithKeras:
 
         def vae_loss(y_true, y_pred):
             #print(self.c_current)
-            return K.mean(recon_loss(y_true, y_pred) + self.alpha *kl_loss(y_true, y_pred))
+            return K.mean(recon_loss(y_true, y_pred) + self.alpha *kl_loss(y_true, y_pred)) + self.hcv_scale*HSIC(y_true, y_pred)
+
+        def HSIC(y_true, y_pred):
+            
+            def gaussian_sample(mean, var):
+                sample = K.random_normal(K.shape(mean), mean, K.sqrt(var))
+                sample.set_shape(mean.get_shape())
+                return sample
+
+            def hsic_objective(z, s):
+            # use a gaussian RBF for every variable
+                def K_hcv(x1, x2, gamma=1.): 
+                    dist_table = tf.expand_dims(x1, 0) - tf.expand_dims(x2, 1)
+                    return tf.transpose(tf.exp(-gamma * tf.reduce_sum(dist_table **2, axis=2)))
+                
+                d_z = z.get_shape().as_list()[1]
+                d_s = s.get_shape().as_list()[1]
+                
+                gz = 2 * gamma(0.5 * (d_z+1)) / gamma(0.5 * d_z)
+                gs = 2 * gamma(0.5 * (d_s+1)) / gamma(0.5 * d_s)
+                
+                zz = K_hcv(z, z, gamma= 1. / (2. * gz))
+                ss = K_hcv(s, s, gamma= 1. / (2. * gs))
+                
+                hsic = 0
+                hsic += tf.reduce_mean(zz * ss) 
+                hsic += tf.reduce_mean(zz) * tf.reduce_mean(ss)
+                hsic -= 2 * tf.reduce_mean( tf.reduce_mean(zz, axis=1) * tf.reduce_mean(ss, axis=1) )
+                return tf.sqrt(hsic)
+                
+            Z = gaussian_sample(self.mu,self.log_var)
+            
+            return hsic_objective(Z,Z)
 
         def kl_loss(y_true, y_pred):
             return 0.5 * K.sum(K.exp(self.log_var) + K.square(self.mu) - 1. - self.log_var, axis=1)
@@ -214,9 +255,9 @@ class C_VAEArithKeras:
         def recon_loss(y_true, y_pred):
             return 0.5 * K.sum(K.square((y_true - y_pred)), axis=1)
 
-        self.vae_optimizer = keras.optimizers.Adam(lr=self.learning_rate)
+        self.vae_optimizer = keras.optimizers.Adam(lr=self.learning_rate,clipvalue=0.5)
         self.vae_model.compile(optimizer=self.vae_optimizer, loss=vae_loss, 
-        metrics=[kl_loss ,recon_loss,kl_loss_monitor0,kl_loss_monitor1,kl_loss_monitor2,kl_loss_monitor3,
+        metrics=[HSIC,kl_loss ,recon_loss,kl_loss_monitor0,kl_loss_monitor1,kl_loss_monitor2,kl_loss_monitor3,
         kl_loss_monitor4])
         
     def to_latent(self, data):
@@ -502,7 +543,7 @@ class C_VAEArithKeras:
             #LambdaCallback(on_epoch_end=lambda epoch, log: update_val_c(epoch)),
             # EarlyStopping(patience=early_stop_limit, monitor='loss', min_delta=threshold),
             CSVLogger(filename=self.model_to_use+"/csv_logger.log"),
-            ModelCheckpoint(os.path.join(self.model_to_use+"/model_checkpoint.h5"),monitor='vae_loss',verbose=1),
+            ModelCheckpoint('model_checkpoint.h5',monitor='vae_loss',verbose=1),
             EarlyStopping(monitor='vae_loss',patience=5,verbose=1)
         ]
         
