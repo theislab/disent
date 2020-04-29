@@ -1,6 +1,6 @@
-# disent
+# Master Thesis Project: Harshita Agarwala
 
-Git Hub Repository for Disentanglement in scRNA-seq
+Extracting Interpretable Latent Spaces for scRNA-seq Using Disentangled Representations 
 
 ## Usage
 
