@@ -1,8 +1,8 @@
-# Master Thesis Project: Harshita Agarwala
+## Master Thesis Project: Harshita Agarwala
 
 Extracting Interpretable Latent Spaces for scRNA-seq Using Disentangled Representations 
 
-## Usage
+### Usage
 
 Reproducing results from Jupyter Notebooks:
 * JN1_train.ipynb - loads, normalizes and trains the data
@@ -11,4 +11,8 @@ Reproducing results from Jupyter Notebooks:
 * JN4_Out of Sample Prediction.ipynb - implements Out of Sample Prediction and analyses the results further
 * Model Comparisons folder provides the notebooks to reproducs the model architecture comparison plots.
 
-The environment.yml file specifies the conda environment in which the project was run.
+### Misc
+* The **environment.yml** file specifies the conda environment in which the project was run.
+* Data can be accessed from [here](https://drive.google.com/drive/folders/1ywXG0K-_nuqnFL8u3x4klsPNOrEdeg27A)
+
+
