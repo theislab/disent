@@ -71,7 +71,7 @@ def generate_simulated_reg_plots(path,actual_data,clust_typ,cells):
                                              textsize=14)
         reg_mean_vals.append(list([first_cell,reg_val[0],reg_val[1]]))
         
-        if reg_val[1] >= 0.70:
+        if reg_val[1] >= 0.40:
             source_cell = [string for string in cells if string in file]
             source_cell = source_cell[0]
             generate_simulated_umaps(path,actual_data,clust_typ,source_cell,adata,first_cell)
