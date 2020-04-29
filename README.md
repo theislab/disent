@@ -13,6 +13,6 @@ Reproducing results from Jupyter Notebooks:
 
 ### Misc
 * The **environment.yml** file specifies the conda environment in which the project was run.
-* Data can be accessed from [here](https://drive.google.com/drive/folders/1ywXG0K-_nuqnFL8u3x4klsPNOrEdeg27A)
+* Data can be accessed from [here](https://drive.google.com/open?id=1ywXG0K-_nuqnFL8u3x4klsPNOrEdeg27)
 
 
