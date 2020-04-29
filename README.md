@@ -10,3 +10,5 @@ Reproducing results from Jupyter Notebooks:
 * JN3_dentate_analysis.ipynb - further analyses the trained model for Dentate Gyrus dataset.
 * JN4_Out of Sample Prediction.ipynb - implements Out of Sample Prediction and analyses the results further
 * Model Comparisons folder provides the notebooks to reproducs the model architecture comparison plots.
+
+The environment.yml file specifies the conda environment in which the project was run.
