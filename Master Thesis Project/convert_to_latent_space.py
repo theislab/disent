@@ -8,15 +8,13 @@ import pandas as pd
 import numpy as np
 import glob, os
 import matplotlib
-import beta_vae
+import beta_vae_5
 import seaborn as sns
 
 sns.set(font_scale=1)
 sns.set_style("darkgrid")
 
 def single_feature_to_latent(path,adata,feature,model,z_dim):
-
-    old_path = os.getcwd()
 
     cell_in_latentspace = model.to_latent(adata.X)
     df_cols = []
@@ -62,4 +60,3 @@ def single_feature_to_latent(path,adata,feature,model,z_dim):
         plt.show()
 
         plt.savefig(dim_col+".png", bbox_inches='tight',dpi=150)
-    os.chdir(old_path)

@@ -1,7 +1,7 @@
 import warnings
 import os
 warnings.filterwarnings('ignore')
-import beta_vae
+import beta_vae_5
 import anndata
 import scanpy as sc
 import pandas as pd
@@ -50,28 +50,27 @@ def feature_scores(model,L,B,data):
     '''
     Calculates difference scores to measure disentaglement. 
     '''
-    z_diff_list_cluster = []
-    z_diff_list_age = []
+    z_diff_list_cell_type = []
+    z_diff_list_cond = []
     z_diff_list_depth = []
     z_diff_list_exp = []
-    #cell_names = list(set(data.obs["cell_type"]))
 
     for batch in range(B):
-        #print("Batch no: ",str(batch))
-        average_z_diff_cluster = 0
-        average_z_diff_age = 0
+        print("Batch no: ",str(batch))
+        average_z_diff_cell_type = 0
+        average_z_diff_cond = 0
         average_z_diff_depth = 0
         average_z_diff_exp = 0
         
         data = shuffle_adata(data)
         sampled_data = data[0:L,:]
         remaining_data = data[L:,:]
-        #print(remaining_data)
+        
         for l in range(L):
             try:
                 first_sample = sampled_data[l,:]
-                cluster_type = first_sample.obs["clusters"][0]
-                age_type = first_sample.obs["age(days)"][0]
+                cell_type_type = first_sample.obs["cell_type"][0]
+                cond_type = first_sample.obs["condition"][0]
                 depth_type = first_sample.obs["seq_depth"][0]
                 exp_type = first_sample.obs["exp_gene"][0]
 
@@ -79,20 +78,19 @@ def feature_scores(model,L,B,data):
                 first_sample = np.reshape(first_sample,(1,data.shape[1]))
                 z_1 = model.to_latent(first_sample)
 
-                remaining_sample = remaining_data[remaining_data.obs["clusters"]==cluster_type]
+                remaining_sample = remaining_data[remaining_data.obs["cell_type"]==cell_type_type]
                 rand = random.randrange(0,len(remaining_sample))
-                second_sample_cluster = remaining_sample[rand,:]
-                second_sample_cluster = np.reshape(second_sample_cluster.X,(1,data.shape[1]))
-                z_2 = model.to_latent(second_sample_cluster)
+                second_sample_cell_type = remaining_sample[rand,:]
+                second_sample_cell_type = np.reshape(second_sample_cell_type.X,(1,data.shape[1]))
+                z_2 = model.to_latent(second_sample_cell_type)
 
-                remaining_sample_1 = remaining_data[remaining_data.obs["age(days)"]==age_type]
+                remaining_sample_1 = remaining_data[remaining_data.obs["condition"]==cond_type]
                 rand_1 = random.randrange(0,len(remaining_sample_1))
-                second_sample_age = remaining_sample_1[rand_1,:]
-                second_sample_age = np.reshape(second_sample_age.X,(1,data.shape[1]))
-                z_3 = model.to_latent(second_sample_age)
+                second_sample_cond = remaining_sample_1[rand_1,:]
+                second_sample_cond = np.reshape(second_sample_cond.X,(1,data.shape[1]))
+                z_3 = model.to_latent(second_sample_cond)
 
                 remaining_sample_2 = remaining_data[remaining_data.obs["seq_depth"]==depth_type]
-                #print("same seq data",remaining_sample_2)
                 rand_2 = random.randrange(0,len(remaining_sample_2))
                 second_sample_depth = remaining_sample_2[rand_2,:]
                 second_sample_depth = np.reshape(second_sample_depth.X,(1,data.shape[1]))
@@ -104,34 +102,35 @@ def feature_scores(model,L,B,data):
                 second_sample_exp = np.reshape(second_sample_exp.X,(1,data.shape[1]))
                 z_5 = model.to_latent(second_sample_exp)
 
-                z_diff_cluster = abs(z_1[0,:]-z_2[0,:])
-                average_z_diff_cluster = average_z_diff_cluster + z_diff_cluster
+                z_diff_cell_type = abs(z_1[0,:]-z_2[0,:])
+                average_z_diff_cell_type = average_z_diff_cell_type + z_diff_cell_type
 
-                z_diff_age = abs(z_1[0,:]-z_3[0,:])
-                average_z_diff_age = average_z_diff_age + z_diff_age
+                z_diff_cond = abs(z_1[0,:]-z_3[0,:])
+                average_z_diff_cond = average_z_diff_cond + z_diff_cond
 
                 z_diff_depth = abs(z_1[0,:]-z_4[0,:])
                 average_z_diff_depth = average_z_diff_depth + z_diff_depth
 
                 z_diff_exp = abs(z_1[0,:]-z_5[0,:])
                 average_z_diff_exp = average_z_diff_exp + z_diff_exp
+		
             except Exception as e:
                 print(e)
                 pass
-        average_z_diff_cluster = average_z_diff_cluster/L
-        average_z_diff_age = average_z_diff_age/L
+        average_z_diff_cell_type = average_z_diff_cell_type/L
+        average_z_diff_cond = average_z_diff_cond/L
         average_z_diff_depth = average_z_diff_depth/L
         average_z_diff_exp = average_z_diff_exp/L
 
-        z_diff_list_cluster.append([list(average_z_diff_cluster)])
-        z_diff_list_age.append([list(average_z_diff_age)])
+        z_diff_list_cell_type.append([list(average_z_diff_cell_type)])
+        z_diff_list_cond.append([list(average_z_diff_cond)])
         z_diff_list_depth.append([list(average_z_diff_depth)])
         z_diff_list_exp.append([list(average_z_diff_exp)])
         
-    df_cluster = pd.DataFrame(data={"y": ["cluster"]*len(z_diff_list_cluster), "avg_z_diff": z_diff_list_cluster})
-    df_age = pd.DataFrame(data={"y": ["age(days)"]*len(z_diff_list_age), "avg_z_diff": z_diff_list_age})
+    df_cell_type = pd.DataFrame(data={"y": ["cell_type"]*len(z_diff_list_cell_type), "avg_z_diff": z_diff_list_cell_type})
+    df_cond = pd.DataFrame(data={"y": ["condition"]*len(z_diff_list_cond), "avg_z_diff": z_diff_list_cond})
     df_depth = pd.DataFrame(data={"y": ["seq_depth"]*len(z_diff_list_depth), "avg_z_diff": z_diff_list_depth})
     df_exp = pd.DataFrame(data={"y": ["exp_gene"]*len(z_diff_list_exp), "avg_z_diff": z_diff_list_exp})
 
-    df = pd.concat([df_cluster,df_age,df_depth,df_exp])
+    df = pd.concat([df_cell_type,df_cond,df_depth,df_exp])
     return df    

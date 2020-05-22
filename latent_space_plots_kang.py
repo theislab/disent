@@ -1,4 +1,3 @@
-
 import warnings
 warnings.filterwarnings('ignore')
 import scanpy as sc
@@ -6,15 +5,16 @@ from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import seaborn as sns
 import glob, os
 import matplotlib
+import re
 import beta_vae
-import seaborn as sns
 
 sns.set(font_scale=1)
 sns.set_style("darkgrid")
 
-def single_feature_to_latent(path,adata,feature,model,z_dim):
+def double_feature_to_latent(path,adata,feature,feature2,model,z_dim):
 
     old_path = os.getcwd()
 
@@ -24,12 +24,15 @@ def single_feature_to_latent(path,adata,feature,model,z_dim):
     for i in range(z_dim):
         df_cols.append(str(i)+'dim')
     
+    #print(df_cols)
 
     latent_df = pd.DataFrame(cell_in_latentspace,index=adata.obs[feature],
                              columns=df_cols)
     latent_df.reset_index(level=0, inplace=True)
+    latent_df[feature2] = list(adata.obs[feature2])
+    print(latent_df)
     
-    path = path+"cells_latent_"+feature+"/"
+    path = path+"cells_latent_"+feature+feature2+"/"
     
     try:
         os.makedirs(path)
@@ -44,22 +47,22 @@ def single_feature_to_latent(path,adata,feature,model,z_dim):
     for i in range(z_dim):
         dim_col = str(i)+"dim"
         latent_df["groups_dim"] = round(latent_df[dim_col],1)
-        dim0_count = latent_df.groupby(["groups_dim",feature]).count()
-        dim0_count = dim0_count.reset_index(level=[0,1])
-        dim0_count = dim0_count.loc[:,[dim_col,"groups_dim",feature]]
+        dim0_count = latent_df.groupby(["groups_dim",feature,feature2]).count()
+        dim0_count = dim0_count.reset_index(level=[0,1,2])
+        dim0_count = dim0_count.loc[:,[dim_col,"groups_dim",feature,feature2]]
         
-        #print(dim0_count)
+        print(dim0_count)
 
-        fig, ax = plt.subplots(figsize=(4,4))
+        fig, ax = plt.subplots(figsize=(6,6))
         scatter = sns.scatterplot(dim0_count["groups_dim"],dim0_count[feature],
-                   size=dim0_count[dim_col].values,linewidth=0)
+                   size=dim0_count[dim_col].values,hue=dim0_count[feature2],linewidth=0,
+                                  sizes=(10, 150))
         
         
         scatter.set_title("Latent Space for Dimension "+str(i+1), weight="bold")
         scatter.set_ylabel(feature.capitalize())
         scatter.set_xlabel("Linear scale")
-        scatter.get_legend().set_title("Count")
         plt.show()
 
-        plt.savefig(dim_col+".png", bbox_inches='tight',dpi=150)
+        plt.savefig(dim_col+".png", bbox_inches='tight',dpi=100)
     os.chdir(old_path)

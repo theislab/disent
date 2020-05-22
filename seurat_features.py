@@ -1,7 +1,7 @@
 import warnings
 import os
 warnings.filterwarnings('ignore')
-import beta_vae_5
+import beta_vae
 import anndata
 import scanpy as sc
 import pandas as pd

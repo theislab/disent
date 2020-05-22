@@ -52,13 +52,11 @@ def combine_batch_files(observation):
     return combined_csv
 
 def feature_classification(path,z_dim,observation):
-    old_path = os.getcwd()
     os.chdir(path)
     dataframe = combine_batch_files(observation)
     print(dataframe)
     dentate_acc = feature_keras_linear_classifier(dataframe,z_dim)
     dentate_acc.to_csv(observation+"keras_linear_classifier_output_local.csv")
-    os.chdir(old_path)
 
 def feature_keras_linear_classifier(df,z_dim):
 

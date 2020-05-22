@@ -9,7 +9,7 @@ import seaborn as sns
 import glob, os
 import matplotlib
 import re
-import beta_vae
+import beta_vae_5
 
 sns.set(font_scale=1)
 sns.set_style("darkgrid")

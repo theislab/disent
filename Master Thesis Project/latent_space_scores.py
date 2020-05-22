@@ -1,7 +1,7 @@
 import warnings
 import os
 warnings.filterwarnings('ignore')
-import beta_vae
+import beta_vae_5
 import util_loss as ul
 import scanpy as sc
 import pandas as pd
