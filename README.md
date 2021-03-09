@@ -17,4 +17,4 @@ Reproducing results from Jupyter Notebooks:
 
 
 ### reference
-Please cite this paper presented at [Workshop of Computational Biology](https://icml-compbio.github.io/#papers).
+Please cite [this](https://github.com/theislab/disent/raw/master/paper.pdf) paper presented at [Workshop of Computational Biology](https://icml-compbio.github.io/#papers).
