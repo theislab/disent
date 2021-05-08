@@ -1,5 +1,6 @@
 ## Out-of-distribution prediction with disentangled representations for single-cell RNA sequencing data
 
+The pdf for the paper can be found [here](https://github.com/theislab/disent/raw/master/paper.pdf).
 
 
 ### Usage
@@ -16,5 +17,16 @@ Reproducing results from Jupyter Notebooks:
 * Data can be accessed from [here](https://drive.google.com/open?id=1ywXG0K-_nuqnFL8u3x4klsPNOrEdeg27)
 
 
-### reference
-Please cite [this](https://github.com/theislab/disent/raw/master/paper.pdf) paper presented at [Workshop of Computational Biology](https://icml-compbio.github.io/#papers).
+## Reference
+
+please consider citing
+
+
+```
+@inproceedings{lotfollahi2020out,
+  title={Out-of-distribution prediction with disentangled representations for single-cell RNA sequencing data},
+  author={Lotfollahi, Mohammad and Dony, Leander and Agarwala, Harshita and Theis, Fabian},
+  booktitle={ICML 2020 Workshop on Computational Biology (WCB) Proceedings Paper},
+  volume={37},
+  year={2020}
+}
